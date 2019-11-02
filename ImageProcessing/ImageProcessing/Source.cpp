@@ -10,7 +10,7 @@ using namespace std;
 
 
 #define MAXCHANNEL 2
-#define SLIDERMAXVALUE 23
+#define SLIDERMAXVALUE 255
 
 
 char Ch_dephWindow[] = "Channel depth change";
@@ -32,6 +32,7 @@ int channel = 0;
 
 
 void ch_deph(int, void*); //channel deph change
+void fad(int, void*); //random colourgame
 int display_dst(int delay);
 
 
@@ -52,7 +53,11 @@ int main() {
 
 	int userInput;
 	cout << "1 - channel deph change " << endl;
-	cout << "2 - blur filters " << endl;
+	cout << "2 - blur filter " << endl;
+	cout << "3 - Gaussianblur filter " << endl;
+	cout << "4 - medianblur filter " << endl;
+	cout << "5 - bilateral filter " << endl;
+	cout << "6 - random channel deph change " << endl;
 	cin >> userInput;
 
 	namedWindow(MainWindow, WINDOW_AUTOSIZE);
@@ -84,7 +89,7 @@ int main() {
 		}
 
 		waitKey();
-
+	case 3:
 		for (int i = 1; i < MAX_KERNEL_LENGTH; i = i + 2)
 		{
 			GaussianBlur(image, dst, Size(i, i), 0, 0);
@@ -95,7 +100,7 @@ int main() {
 		}
 
 		waitKey();
-
+	case 4:
 		for (int i = 1; i < MAX_KERNEL_LENGTH; i = i + 2)
 		{
 			medianBlur(image, dst, i);
@@ -106,7 +111,7 @@ int main() {
 		}
 
 		waitKey();
-
+	case 5:
 		for (int i = 1; i < MAX_KERNEL_LENGTH; i = i + 2)
 		{
 			bilateralFilter(image, dst, i, i * 2, i / 2);
@@ -116,6 +121,17 @@ int main() {
 			}
 		}
 
+		waitKey();
+	case 6:
+		namedWindow(Ch_dephWindow, WINDOW_AUTOSIZE);
+
+		resizeWindow(Ch_dephWindow, 400, 80);
+		moveWindow(Ch_dephWindow, 0, 300);
+
+		createTrackbar("channel", Ch_dephWindow, &channel, MAXCHANNEL, fad);
+		createTrackbar("byte", Ch_dephWindow, &curByte, 23, fad); 
+		
+		imshow(MainWindow, dst);
 		waitKey();
 
 	default:
@@ -129,16 +145,18 @@ int main() {
 
 
 void ch_deph(int, void*) {
-
 	for (int r = 0; r < dst.rows; r++)
 	{
 		for (int c = 0; c < dst.cols; c++)
 		{
-			dst.at<cv::Vec3b>(r, c)[channel] = dst.at<cv::Vec3b>(r, c)[channel] + curByte;
+			Vec3b& bgr = dst.at<Vec3b>(r, c);
+			bgr[channel] = curByte;
 		}
 	}
+	
 	imshow(MainWindow, dst);
 }
+
 
 int display_dst(int delay)
 {
@@ -149,7 +167,16 @@ int display_dst(int delay)
 }
 
 
+void fad(int, void*) {
+	for (int r = 0; r < dst.rows; r++) 
+	{
+		for (int c = 0; c < dst.cols; c++)
+		{
+			dst.at<cv::Vec3b>(r, c)[channel] = dst.at<cv::Vec3b>(r, c)[channel] * curByte;
+		}
+	}
 
+}
 
 
 /*imwrite("outputGray.jpg", image); //writing file down the folder
@@ -177,3 +204,8 @@ moveWindow("Fixed", image.cols+1, 200);*/
 		image.at<uint8_t>(r , c) = image.at<uint8_t>(r , c) * 0.9f;
 	}
 }*/
+
+
+
+
+
